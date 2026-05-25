@@ -10,7 +10,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { cn } from "@/lib/utils";
 import type { FeatureId } from "@/types/database";
 
-const PRIMARY_DEFAULT = ["/", "/workouts", "/nutrition", "/goals"];
+// Assistant sits in the middle slot of the mobile nav. Goals lives in More.
+const PRIMARY_DEFAULT = ["/", "/workouts", "/assistant", "/nutrition"];
 
 export function BottomTabs({ enabledFeatures }: { enabledFeatures?: FeatureId[] }) {
   const pathname = usePathname();

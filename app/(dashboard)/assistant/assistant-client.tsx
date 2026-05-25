@@ -103,8 +103,14 @@ export function AssistantClient({ threads: initialThreads }: { threads: ThreadSu
     const trimmed = content.trim();
     if (!trimmed) return;
 
-    // Optimistic insert. If we're editing a prior message, we replace from that point.
-    let pendingMessages: ChatMessage[] = [];
+    // Clear the composer immediately so the user gets feedback even if anything below throws.
+    setInput("");
+    setEditingMsgId(null);
+
+    // Pre-compute the pending assistant message id — DO NOT read it from inside the setState
+    // updater (React 18+ batches updaters so it may not run synchronously).
+    const pendingId = `pending-${crypto.randomUUID()}`;
+
     setMessages((xs) => {
       let base = xs;
       if (opts?.replacePrevUserId) {
@@ -126,16 +132,10 @@ export function AssistantClient({ threads: initialThreads }: { threads: ThreadSu
       } else {
         base = [...xs, { id: crypto.randomUUID(), role: "user", content: trimmed }];
       }
-      const pendingId = `pending-${crypto.randomUUID()}`;
-      const next = [...base, { id: pendingId, role: "assistant" as const, content: "" }];
-      pendingMessages = next;
-      return next;
+      return [...base, { id: pendingId, role: "assistant" as const, content: "" }];
     });
 
-    const pendingId = pendingMessages[pendingMessages.length - 1].id;
     setStreaming(true);
-    setInput("");
-    setEditingMsgId(null);
 
     const ac = new AbortController();
     abortRef.current = ac;
@@ -153,6 +153,7 @@ export function AssistantClient({ threads: initialThreads }: { threads: ThreadSu
       const decoder = new TextDecoder();
       let acc = "";
       let nextThreadId = activeThreadId;
+      let sawError = false;
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -170,19 +171,31 @@ export function AssistantClient({ threads: initialThreads }: { threads: ThreadSu
             } else if (evt.type === "done") {
               setMessages((xs) => xs.map((m) => (m.id === pendingId ? { ...m, id: evt.id ?? pendingId, content: acc } : m)));
             } else if (evt.type === "error") {
+              sawError = true;
               toast.error(evt.message ?? "Assistant error");
             }
           } catch {/* */}
         }
       }
+
+      // Stream ended without any content — surface this instead of leaving an empty "…" bubble.
+      if (!acc.trim() && !sawError) {
+        const fallback = "I couldn't generate a response. Try rephrasing — or check your OpenRouter quota.";
+        toast.error("Empty response from the assistant");
+        setMessages((xs) => xs.map((m) => (m.id === pendingId ? { ...m, content: fallback } : m)));
+      } else if (!acc.trim() && sawError) {
+        // Drop the empty bubble so it doesn't sit as "…".
+        setMessages((xs) => xs.filter((m) => m.id !== pendingId));
+      }
+
       if (nextThreadId && nextThreadId !== activeThreadId) {
         setActiveThreadId(nextThreadId);
-        // Refresh thread list — server adds it on first message.
         router.refresh();
       }
     } catch (e) {
       if ((e as Error).name === "AbortError") {
-        // User stopped — keep partial content as the assistant message.
+        // User stopped — keep partial content as the assistant message; drop if empty.
+        setMessages((xs) => xs.filter((m) => m.id !== pendingId || m.content.trim().length > 0));
       } else {
         toast.error(e instanceof Error ? e.message : "Chat failed");
         setMessages((xs) => xs.filter((m) => m.id !== pendingId));
