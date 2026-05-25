@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  // Raise the Server Action body limit (default is 1MB) so image uploads for
+  // food scan / assistant attachments succeed.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "7.5mb",
+    },
+  },
   // Dev-only: allow any LAN / tailnet / loopback origin to load HMR + dev assets.
   // Mix of explicit hosts and wildcards because Next 16's CIDR support is inconsistent.
   allowedDevOrigins: [
