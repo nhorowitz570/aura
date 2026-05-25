@@ -16,7 +16,7 @@ export function Sidebar({ enabledFeatures }: { enabledFeatures?: FeatureId[] }) 
     <aside className="hidden md:sticky md:top-0 md:flex md:h-screen md:w-60 md:shrink-0 md:flex-col md:self-start md:border-r md:bg-card/30">
       <div className="flex h-14 items-center gap-2 border-b px-5">
         <Link href="/" className="flex items-center gap-2">
-          <Image src={logo} alt="" width={22} height={22} className="rounded" priority />
+          <Image src={logo} alt="" width={22} height={22} className="rounded invert dark:invert-0" priority />
           <span className="text-base font-semibold tracking-tight font-sans">Aura</span>
         </Link>
       </div>

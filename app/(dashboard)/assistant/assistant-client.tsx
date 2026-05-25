@@ -245,7 +245,13 @@ export function AssistantClient({ threads: initialThreads }: { threads: ThreadSu
   const sidebarThreads = useMemo(() => threads, [threads]);
 
   return (
-    <div className="-mx-4 grid h-[calc(100dvh-7rem)] grid-cols-1 overflow-hidden md:-mx-8 md:grid-cols-[260px_1fr] md:h-[calc(100dvh-3.5rem)]">
+    <div className={cn(
+      // Mobile: lock the chat between the sticky app header and fixed bottom tabs so only the
+      // inner message scroller moves — top bars, sub-header and composer stay put.
+      "fixed inset-x-0 top-14 z-20 flex flex-col overflow-hidden bg-background bottom-[calc(3.5rem+env(safe-area-inset-bottom))]",
+      // Desktop: in-flow two-column grid as before.
+      "md:static md:inset-auto md:top-auto md:bottom-auto md:z-auto md:-mx-8 md:grid md:h-[calc(100dvh-3.5rem)] md:grid-cols-[260px_1fr]",
+    )}>
       {/* Desktop sidebar */}
       <aside className="hidden border-r md:flex md:flex-col">
         <div className="border-b p-3">

@@ -40,7 +40,7 @@ export function SplashGate({ children }: { children: React.ReactNode }) {
           style={{ opacity, transition: "opacity 0.2s" }}
         >
           <div className="animate-pulse">
-            <Image src={logo} alt="" width={120} height={120} priority />
+            <Image src={logo} alt="" width={120} height={120} priority className="invert dark:invert-0" />
           </div>
         </div>
       )}

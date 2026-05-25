@@ -22,7 +22,7 @@ export async function AppHeader({ title }: { title?: string }) {
       {/* Mobile: logo + wordmark. Desktop: leave room for sidebar logo and show an optional title. */}
       <div className="flex items-center gap-2 md:hidden">
         <Link href="/" className="flex items-center gap-2">
-          <Image src={logo} alt="" width={22} height={22} className="rounded" priority />
+          <Image src={logo} alt="" width={22} height={22} className="rounded invert dark:invert-0" priority />
           <span className="text-base font-semibold tracking-tight font-sans">Aura</span>
         </Link>
       </div>
