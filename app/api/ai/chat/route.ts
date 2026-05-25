@@ -25,6 +25,10 @@ function diffMinutes(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
 }
 
+function prettyToolName(name: string): string {
+  return name.replace(/_/g, " ");
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -138,6 +142,7 @@ export async function POST(req: NextRequest) {
 
       let finalText = "";
       let iter = 0;
+      const toolsCalled: { name: string; ok: boolean }[] = [];
       while (iter++ < 4) {
         let toolCalled = false;
         try {
@@ -151,6 +156,8 @@ export async function POST(req: NextRequest) {
               try { args = JSON.parse(evt.arguments); } catch {/* */}
               sse({ type: "tool", name: evt.name });
               const out = await dispatchTool(evt.name, args);
+              const okFlag = !(out.result && typeof out.result === "object" && "error" in (out.result as object));
+              toolsCalled.push({ name: evt.name, ok: okFlag });
               history.push({
                 role: "assistant",
                 content: "",
@@ -169,6 +176,21 @@ export async function POST(req: NextRequest) {
           break;
         }
         if (!toolCalled) break;
+      }
+
+      // Fallback: if the model called tools but never produced a text reply,
+      // synthesize a short confirmation so the user doesn't see an empty bubble.
+      if (!finalText.trim() && toolsCalled.length > 0) {
+        const ok = toolsCalled.filter((t) => t.ok).map((t) => prettyToolName(t.name));
+        const failed = toolsCalled.filter((t) => !t.ok).map((t) => prettyToolName(t.name));
+        const parts: string[] = [];
+        if (ok.length) parts.push(`Done — ${ok.join(", ")}.`);
+        if (failed.length) parts.push(`Failed: ${failed.join(", ")}.`);
+        finalText = parts.join(" ") || "Done.";
+        sse({ type: "delta", text: finalText });
+      } else if (!finalText.trim()) {
+        // No tools called and no text — surface as an error so the client can show the proper message.
+        sse({ type: "error", message: "The model returned an empty response. Try again." });
       }
 
       // Persist final assistant message.
