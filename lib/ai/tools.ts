@@ -221,7 +221,7 @@ async function queryHistory(kind: string, days: number): Promise<unknown> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
-  const { start, end } = rangeBounds(days);
+  const { start, end } = await rangeBounds(days);
   switch (kind) {
     case "meals": {
       const { data } = await supabase.from("meals").select("at,name,calories,protein_g,carbs_g,fat_g").eq("user_id", user.id).gte("at", start).lt("at", end).order("at");

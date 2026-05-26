@@ -3,9 +3,10 @@ import { Card } from "@/components/ui/card";
 import { listSessions } from "@/server/actions/workouts";
 import { getUserProfile } from "@/server/actions/auth";
 import { kgToLb } from "@/lib/units";
+import { getTzOffsetMin, formatLocalDateTime } from "@/lib/dates";
 
 export default async function HistoryPage() {
-  const [sessions, profileRes] = await Promise.all([listSessions(60), getUserProfile()]);
+  const [sessions, profileRes, offsetMin] = await Promise.all([listSessions(60), getUserProfile(), getTzOffsetMin()]);
   const imperial = profileRes.data?.units === "imperial";
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -21,7 +22,7 @@ export default async function HistoryPage() {
           <li key={s.id}>
             <Card className="p-4">
               <div className="flex items-baseline justify-between">
-                <p className="text-sm font-medium">{new Date(s.started_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</p>
+                <p className="text-sm font-medium">{formatLocalDateTime(s.started_at, offsetMin)}</p>
                 <p className="text-xs tabular-nums text-muted-foreground">
                   {s.sets.length} sets · {imperial ? `${Math.round(kgToLb(s.volume_kg)).toLocaleString()} lb` : `${Math.round(s.volume_kg).toLocaleString()} kg`} vol
                 </p>

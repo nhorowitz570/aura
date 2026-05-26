@@ -356,7 +356,7 @@ export async function finishSession(id: string, notes?: string) {
     .eq("user_id", user.id);
   if (error) return { error: error.message };
   await supabase.from("daily_logs").upsert(
-    { user_id: user.id, date: todayISO(), has_workout: true },
+    { user_id: user.id, date: await todayISO(), has_workout: true },
     { onConflict: "user_id,date" },
   );
   revalidatePath("/workouts", "layout");
@@ -446,7 +446,7 @@ export async function listSessions(days = 60): Promise<SessionSummary[]> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { start, end } = rangeBounds(days);
+  const { start, end } = await rangeBounds(days);
   const { data } = await supabase
     .from("workout_sessions")
     .select("*, sets:workout_session_sets(*)")
@@ -469,7 +469,7 @@ export async function hasWorkoutToday(): Promise<boolean> {
     .from("daily_logs")
     .select("has_workout")
     .eq("user_id", user.id)
-    .eq("date", todayISO())
+    .eq("date", await todayISO())
     .maybeSingle();
   return !!data?.has_workout;
 }

@@ -2,16 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { rangeBounds, todayISO } from "@/lib/dates";
+import { rangeBounds, todayISO, getTzOffsetMin, toLocalISODate } from "@/lib/dates";
 import type { BodyMetric } from "@/types/database";
 
 export async function getRecentBodyMetrics(days = 90): Promise<BodyMetric[]> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { start, end } = rangeBounds(days);
-  const startDate = start.slice(0, 10);
-  const endDate = end.slice(0, 10);
+  const { start, end } = await rangeBounds(days);
+  const offsetMin = await getTzOffsetMin();
+  const startDate = toLocalISODate(start, offsetMin);
+  const endDate = toLocalISODate(end, offsetMin);
   const { data } = await supabase
     .from("body_metrics")
     .select("*")
@@ -29,7 +30,7 @@ export async function logWeight(input: { weight_kg?: number | null; body_fat_pct
   if (input.weight_kg == null && input.body_fat_pct == null) return { error: "Provide weight or body fat %" };
   const row = {
     user_id: user.id,
-    date: input.date ?? todayISO(),
+    date: input.date ?? (await todayISO()),
     weight_kg: input.weight_kg ?? null,
     body_fat_pct: input.body_fat_pct ?? null,
   };

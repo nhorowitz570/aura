@@ -9,7 +9,7 @@ export async function getRecentVitals(days = 30): Promise<VitalsLog[]> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { start, end } = rangeBounds(days);
+  const { start, end } = await rangeBounds(days);
   const { data } = await supabase
     .from("vitals_logs")
     .select("*")

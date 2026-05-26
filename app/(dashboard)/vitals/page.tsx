@@ -7,6 +7,7 @@ import { getUserProfile } from "@/server/actions/auth";
 import { getConnectedSources } from "@/server/actions/dataSources";
 import { hasSourceFor } from "@/lib/data-sources";
 import { getRecentVitals } from "@/server/actions/vitals";
+import { getTzOffsetMin, formatLocalDateTime } from "@/lib/dates";
 
 export default async function VitalsPage() {
   const [profileRes, connected] = await Promise.all([getUserProfile(), getConnectedSources()]);
@@ -24,7 +25,7 @@ export default async function VitalsPage() {
     );
   }
 
-  const records = await getRecentVitals(30);
+  const [records, offsetMin] = await Promise.all([getRecentVitals(30), getTzOffsetMin()]);
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-end justify-between">
@@ -43,7 +44,7 @@ export default async function VitalsPage() {
             <li key={r.id}>
               <Card className="flex items-center justify-between p-4">
                 <div>
-                  <p className="text-sm font-medium">{new Date(r.at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</p>
+                  <p className="text-sm font-medium">{formatLocalDateTime(r.at, offsetMin)}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
                     {[
                       r.resting_hr != null ? `RHR ${r.resting_hr}` : null,

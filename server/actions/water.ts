@@ -9,7 +9,7 @@ export async function getWaterToday(): Promise<{ total_ml: number; entries: Wate
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { total_ml: 0, entries: [] };
-  const { start, end } = dayBounds(new Date());
+  const { start, end } = await dayBounds(new Date());
   const { data } = await supabase
     .from("water_logs")
     .select("*")
@@ -32,7 +32,7 @@ export async function addWater(delta_ml: number) {
   if (error) return { error: error.message };
   if (delta > 0) {
     await supabase.from("daily_logs").upsert(
-      { user_id: user.id, date: todayISO(), has_water_log: true },
+      { user_id: user.id, date: await todayISO(), has_water_log: true },
       { onConflict: "user_id,date" },
     );
   }

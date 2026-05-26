@@ -12,6 +12,7 @@ import { getSleepToday } from "@/server/actions/sleep";
 import { hasWorkoutToday, getTodayProgramDay } from "@/server/actions/workouts";
 import { getStreaks } from "@/server/actions/streaks";
 import { formatWater, formatMinutes } from "@/lib/units";
+import { getTzOffsetMin } from "@/lib/dates";
 
 function diffMinutes(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
@@ -42,7 +43,8 @@ export default async function HomePage() {
   const waterPct = Math.min(100, Math.round((waterRes.total_ml / waterGoal) * 100));
   const sleepPct = sleepMin ? Math.min(100, Math.round((sleepMin / sleepGoal) * 100)) : 0;
 
-  const hour = new Date().getHours();
+  const offsetMin = await getTzOffsetMin();
+  const hour = new Date(Date.now() - offsetMin * 60_000).getUTCHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const firstName = profile?.display_name?.split(" ")[0];
 

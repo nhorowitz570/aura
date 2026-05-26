@@ -7,10 +7,11 @@ import { LogMealSheet } from "@/components/features/log-meal-sheet";
 import { FoodScanSheet } from "@/components/features/food-scan-sheet";
 import { getGoals } from "@/server/actions/goals";
 import { getMealsToday } from "@/server/actions/meals";
+import { getTzOffsetMin, formatLocalTime } from "@/lib/dates";
 import { MealDeleteButton } from "./meal-delete-button";
 
 export default async function NutritionPage() {
-  const [goalsRes, { meals, totals }] = await Promise.all([getGoals(), getMealsToday()]);
+  const [goalsRes, { meals, totals }, offsetMin] = await Promise.all([getGoals(), getMealsToday(), getTzOffsetMin()]);
   const g = goalsRes.data;
   const calorieGoal = g?.calories ?? 2200;
   const proteinGoal = g?.protein_g ?? 150;
@@ -59,7 +60,7 @@ export default async function NutritionPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-muted-foreground">
-                    {new Date(m.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                    {formatLocalTime(m.at, offsetMin)}
                   </span>
                   <MealDeleteButton id={m.id} />
                 </div>

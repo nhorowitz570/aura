@@ -13,7 +13,7 @@ export async function getStreaks(): Promise<Record<StreakKind, number>> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { log: 0, workout: 0, water: 0 };
 
-  const dates = listDateStrings(180).reverse(); // newest first
+  const dates = (await listDateStrings(180)).reverse(); // newest first
 
   const { data: daily } = await supabase
     .from("daily_logs")

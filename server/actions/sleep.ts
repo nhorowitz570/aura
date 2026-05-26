@@ -9,7 +9,7 @@ export async function getRecentSleep(days = 30): Promise<SleepLog[]> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { start, end } = rangeBounds(days);
+  const { start, end } = await rangeBounds(days);
   const { data } = await supabase
     .from("sleep_logs")
     .select("*")
@@ -24,7 +24,7 @@ export async function getSleepToday(): Promise<SleepLog | null> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { start, end } = dayBounds(new Date());
+  const { start, end } = await dayBounds(new Date());
   const { data } = await supabase
     .from("sleep_logs")
     .select("*")
@@ -50,7 +50,7 @@ export async function logSleep(input: { start_at: string; end_at: string; qualit
   });
   if (error) return { error: error.message };
   await supabase.from("daily_logs").upsert(
-    { user_id: user.id, date: todayISO(), has_sleep_log: true },
+    { user_id: user.id, date: await todayISO(), has_sleep_log: true },
     { onConflict: "user_id,date" },
   );
   revalidatePath("/", "layout");

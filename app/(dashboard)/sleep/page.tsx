@@ -7,6 +7,7 @@ import { getConnectedSources } from "@/server/actions/dataSources";
 import { hasSourceFor } from "@/lib/data-sources";
 import { getRecentSleep } from "@/server/actions/sleep";
 import { formatMinutes } from "@/lib/units";
+import { getTzOffsetMin, formatLocalDateShort, formatLocalTime } from "@/lib/dates";
 import { Plus } from "lucide-react";
 
 function diffMinutes(a: string, b: string) {
@@ -29,7 +30,7 @@ export default async function SleepPage() {
     );
   }
 
-  const records = await getRecentSleep(30);
+  const [records, offsetMin] = await Promise.all([getRecentSleep(30), getTzOffsetMin()]);
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-end justify-between">
@@ -50,9 +51,9 @@ export default async function SleepPage() {
               <li key={r.id}>
                 <Card className="flex items-center justify-between p-4">
                   <div>
-                    <p className="text-sm font-medium">{new Date(r.end_at).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</p>
+                    <p className="text-sm font-medium">{formatLocalDateShort(r.end_at, offsetMin)}</p>
                     <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-                      {new Date(r.start_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} → {new Date(r.end_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                      {formatLocalTime(r.start_at, offsetMin)} → {formatLocalTime(r.end_at, offsetMin)}
                       {r.quality ? ` · quality ${r.quality}/5` : ""}
                     </p>
                   </div>

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { Profile } from "@/types/database";
 
 export async function getUser() {
@@ -100,11 +101,23 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   return { error: "Check your email to confirm your account." };
 }
 
-export async function deleteAccount() {
+export async function deleteAccount(): Promise<{ error: string } | never> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  await supabase.from("profiles").update({ display_name: "(deleted)" }).eq("id", user!.id);
+
+  // Fully remove the auth user. Every user-scoped table FKs auth.users(id)
+  // with ON DELETE CASCADE, so this also wipes profiles, meals, water_logs,
+  // workouts, sleep, vitals, body_metrics, goals, ai_threads/messages, etc.
+  let admin;
+  try {
+    admin = createAdminClient();
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Admin client unavailable" };
+  }
+  const { error } = await admin.auth.admin.deleteUser(user!.id);
+  if (error) return { error: error.message };
+
   await supabase.auth.signOut();
   redirect("/login");
 }

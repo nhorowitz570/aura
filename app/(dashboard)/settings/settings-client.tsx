@@ -736,9 +736,21 @@ function ExportSection() {
 /* ----------------------------- Account ----------------------------- */
 
 function AccountSection() {
+  const [pending, start] = useTransition();
   const onDelete = () => {
-    if (!confirm("Delete your account? This signs you out and marks the account for deletion.")) return;
-    deleteAccount();
+    if (!confirm("Permanently delete your account? This wipes all your data and signs you out. This cannot be undone.")) return;
+    start(async () => {
+      // A successful delete redirects to /login (throws NEXT_REDIRECT), so we
+      // only land in the catch/return for actual failures.
+      try {
+        const res = await deleteAccount();
+        if (res && "error" in res && res.error) toast.error(res.error);
+      } catch (err) {
+        // next/navigation redirect throws — that's success, swallow it.
+        if (err instanceof Error && /NEXT_REDIRECT/.test(err.message)) return;
+        toast.error(err instanceof Error ? err.message : "Delete failed");
+      }
+    });
   };
   return (
     <SectionShell id="account" title="Account">
@@ -748,7 +760,9 @@ function AccountSection() {
             <LogOut className="mr-1.5 h-4 w-4" /> Sign out
           </Button>
         </form>
-        <Button variant="destructive" onClick={onDelete}>Delete account</Button>
+        <Button variant="destructive" onClick={onDelete} disabled={pending}>
+          {pending ? "Deleting…" : "Delete account"}
+        </Button>
       </div>
     </SectionShell>
   );

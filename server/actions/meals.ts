@@ -10,7 +10,7 @@ export async function getMealsToday(): Promise<{ meals: Meal[]; totals: DayMacro
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { meals: [], totals: zeroMacros() };
-  const { start, end } = dayBounds(new Date());
+  const { start, end } = await dayBounds(new Date());
   const { data } = await supabase
     .from("meals")
     .select("*")
@@ -52,7 +52,7 @@ export async function logMeal(input: MealInput) {
   const { data, error } = await supabase.from("meals").insert(row).select("*").single();
   if (error) return { error: error.message };
   await supabase.from("daily_logs").upsert(
-    { user_id: user.id, date: todayISO(), has_meal_log: true },
+    { user_id: user.id, date: await todayISO(), has_meal_log: true },
     { onConflict: "user_id,date" },
   );
   revalidatePath("/", "layout");
