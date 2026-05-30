@@ -68,7 +68,7 @@ export async function signInWithEmail(_prev: AuthState, formData: FormData): Pro
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
-  redirect("/");
+  redirect("/home");
 }
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {

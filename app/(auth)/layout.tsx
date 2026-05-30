@@ -6,7 +6,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) redirect("/");
+  if (user) redirect("/home");
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">

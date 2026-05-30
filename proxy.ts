@@ -38,11 +38,21 @@ export async function proxy(request: NextRequest) {
   const isAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
   const isOnboarding = pathname.startsWith("/onboarding");
 
+  // Allow the landing page at / for unauthenticated visitors
+  if (!user && pathname === "/") {
+    return supabaseResponse;
+  }
+
   if (!user && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (user && isAuthPage) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/home", request.url));
+  }
+
+  // Redirect authenticated users from / (landing) to /home (dashboard)
+  if (user && pathname === "/") {
+    return NextResponse.redirect(new URL("/home", request.url));
   }
 
   if (user && !isOnboarding) {
@@ -64,7 +74,7 @@ export async function proxy(request: NextRequest) {
       .eq("id", user.id)
       .maybeSingle();
     if (profile?.onboarded_at) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/home", request.url));
     }
   }
 

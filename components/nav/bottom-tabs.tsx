@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import type { FeatureId } from "@/types/database";
 
 // Assistant sits in the middle slot of the mobile nav. Goals lives in More.
-const PRIMARY_DEFAULT = ["/", "/workouts", "/assistant", "/nutrition"];
+const PRIMARY_DEFAULT = ["/home", "/workouts", "/assistant", "/nutrition"];
 
 export function BottomTabs({ enabledFeatures }: { enabledFeatures?: FeatureId[] }) {
   const pathname = usePathname();
@@ -32,7 +32,7 @@ export function BottomTabs({ enabledFeatures }: { enabledFeatures?: FeatureId[] 
 
   const secondary = allItems.filter((i) => !primary.find((p) => p.href === i.href));
 
-  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href));
+  const isActive = (href: string) => pathname === href || (href !== "/home" && pathname.startsWith(href));
   const moreActive = secondary.some((i) => isActive(i.href));
 
   return (

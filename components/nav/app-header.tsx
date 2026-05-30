@@ -21,7 +21,7 @@ export async function AppHeader({ title }: { title?: string }) {
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur md:px-6">
       {/* Mobile: logo + wordmark. Desktop: leave room for sidebar logo and show an optional title. */}
       <div className="flex items-center gap-2 md:hidden">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/home" className="flex items-center gap-2">
           <Image src={logo} alt="" width={22} height={22} className="rounded invert dark:invert-0" priority />
           <span className="text-base font-semibold tracking-tight font-sans">Aura</span>
         </Link>

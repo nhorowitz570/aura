@@ -132,7 +132,7 @@ export function OnboardingWizard({ profile }: { profile: Profile }) {
   const onFinish = () => start(async () => {
     await markOnboarded();
     toast.success("All set");
-    router.replace("/");
+    router.replace("/home");
     router.refresh();
   });
 

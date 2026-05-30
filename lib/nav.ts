@@ -7,7 +7,7 @@ export type NavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Home", href: "/", icon: Home },
+  { label: "Home", href: "/home", icon: Home },
   { label: "Workouts", href: "/workouts", icon: Dumbbell },
   { label: "Nutrition", href: "/nutrition", icon: Apple },
   { label: "Hydration", href: "/hydration", icon: Droplet },
@@ -19,9 +19,9 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const PRIMARY_MOBILE: NavItem[] = NAV_ITEMS.filter((i) =>
-  ["/", "/workouts", "/nutrition", "/goals"].includes(i.href),
+  ["/home", "/workouts", "/nutrition", "/goals"].includes(i.href),
 );
 
 export const SECONDARY_MOBILE: NavItem[] = NAV_ITEMS.filter(
-  (i) => !["/", "/workouts", "/nutrition", "/goals"].includes(i.href),
+  (i) => !["/home", "/workouts", "/nutrition", "/goals"].includes(i.href),
 );

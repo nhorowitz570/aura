@@ -17,7 +17,7 @@ export const FEATURE_DESCRIPTION: Record<FeatureId, string> = {
 };
 
 // Pages that are always available regardless of feature toggles.
-export const CORE_HREFS = new Set(["/", "/goals", "/assistant", "/settings", "/onboarding"]);
+export const CORE_HREFS = new Set(["/home", "/goals", "/assistant", "/settings", "/onboarding"]);
 
 export const HREF_TO_FEATURE: Record<string, FeatureId> = {
   "/workouts": "workouts",
