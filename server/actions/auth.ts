@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeCode, reserveCode, releaseCode, recordUse } from "@/lib/access-codes";
 import type { Profile } from "@/types/database";
 
 export async function getUser() {
@@ -74,9 +75,25 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("displayName") ?? "").trim();
+  const rawCode = String(formData.get("accessCode") ?? "");
   if (!email || !password) return { error: "Email and password are required" };
   if (password.length < 8) return { error: "Password must be at least 8 characters" };
+  if (!rawCode) return { error: "Access code is required" };
 
+  const accessCode = normalizeCode(rawCode);
+
+  // ── Reserve the code atomically before creating the auth user. ──
+  // Uses a SECURITY DEFINER RPC with a conditional UPDATE so concurrent
+  // requests with the same code race safely — only one passes.
+  let reserved: boolean;
+  try {
+    reserved = await reserveCode(accessCode);
+  } catch {
+    return { error: "Unable to verify access code. Please try again." };
+  }
+  if (!reserved) return { error: "Invalid, expired, or already-used access code." };
+
+  // ── Create the auth user. ──
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -88,7 +105,17 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
         : undefined,
     },
   });
-  if (error) return { error: error.message };
+
+  if (error) {
+    // SignUp failed — release the reserved code use.
+    await releaseCode(accessCode);
+    return { error: error.message };
+  }
+
+  // ── Record the code use. ──
+  // userId may be null when email confirmations are on (user exists but
+  // isn't confirmed yet). We still record the use to prevent reuse.
+  await recordUse(accessCode, data.user?.id ?? null);
 
   // If email confirmations are off, the user is now logged in. Push to onboarding.
   if (data.session) {

@@ -218,4 +218,19 @@ export type Streak = {
   last_day: string | null;
 };
 
+export type AccessCode = {
+  code: string;
+  max_uses: number;
+  use_count: number;
+  expires_at: string | null;
+  created_at: string;
+};
+
+export type AccessCodeUse = {
+  id: string;
+  code: string;
+  user_id: string | null;
+  used_at: string;
+};
+
 export type Json = string | number | boolean | null | { [k: string]: Json } | Json[];

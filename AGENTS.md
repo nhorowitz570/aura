@@ -28,3 +28,8 @@ Please leave notes for other agents about the codebase if needed.
 - **AI memory modal**: `components/ai/memory-modal.tsx` is the single source of truth for view/add/edit/delete. The settings card just opens it.
 - **Geist font** loaded via `next/font/google` in `app/layout.tsx`; `--font-geist` → `--font-sans`.
 - **Migration**: `db/migrations/v3_ai_prefs_features.sql` adds all v3 columns; idempotent.
+
+## v4 additions
+
+- **Access codes**: signup is gated by an access code. Tables: `access_codes` (code PK, max_uses, use_count, expires_at) and `access_code_uses` (per-use log with user_id). All code operations go through `createAdminClient()` (service role) — the anon client cannot read these tables (RLS enabled, no policies). Atomic reservation uses `reserve_access_code` / `release_access_code` SECURITY DEFINER RPCs defined in the migration. Code generation utility in `lib/access-codes.ts` (128-bit random, base32, XXXX-XXXX-XXXX-XXXX format). The `signUp` action in `server/actions/auth.ts` reserves the code before creating the auth user and releases it on failure. Codes are consumed on submit (reserve-on-submit model), not on email confirmation.
+- **Migration**: `db/migrations/v4_access_codes.sql` adds tables + RPCs; idempotent.

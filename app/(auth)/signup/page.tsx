@@ -30,6 +30,18 @@ export default function SignupPage() {
           <Input id="password" name="password" type="password" required minLength={8} autoComplete="new-password" />
           <p className="text-xs text-muted-foreground">At least 8 characters.</p>
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="accessCode">Access code</Label>
+          <Input
+            id="accessCode"
+            name="accessCode"
+            type="text"
+            required
+            placeholder="XXXX-XXXX-XXXX-XXXX"
+            autoComplete="off"
+            className="font-mono tracking-wider uppercase"
+          />
+        </div>
 
         {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
 
