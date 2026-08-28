@@ -33,3 +33,12 @@ Please leave notes for other agents about the codebase if needed.
 
 - **Access codes**: signup is gated by an access code. Tables: `access_codes` (code PK, max_uses, use_count, expires_at) and `access_code_uses` (per-use log with user_id). All code operations go through `createAdminClient()` (service role) — the anon client cannot read these tables (RLS enabled, no policies). Atomic reservation uses `reserve_access_code` / `release_access_code` SECURITY DEFINER RPCs defined in the migration. Code generation utility in `lib/access-codes.ts` (128-bit random, base32, XXXX-XXXX-XXXX-XXXX format). The `signUp` action in `server/actions/auth.ts` reserves the code before creating the auth user and releases it on failure. Codes are consumed on submit (reserve-on-submit model), not on email confirmation.
 - **Migration**: `db/migrations/v4_access_codes.sql` adds tables + RPCs; idempotent.
+
+## Local / Cloud Agent dev environment
+
+- **Config**: `.cursor/environment.json` wires `scripts/cloud-agent-install.sh` (npm deps + Docker/fuse-overlayfs/Supabase CLI) and `scripts/cloud-agent-start.sh` (brings up the local Supabase stack, applies `db/migrations/v3` + `v4`, seeds exercises, writes `.env.local`), then runs `npm run dev` in a terminal. Both scripts are idempotent.
+- **Local Supabase** runs via `supabase start` (config in `supabase/config.toml`). Docker must use the `fuse-overlayfs` storage driver (overlay2 chokes on whiteout files in the nested VM; vfs is too slow for Postgres), and `bridge-nf-call-iptables` must be `0` so containers can reach Postgres — the start script handles both.
+- **Migrations order**: `supabase/migrations/0001_initial.sql` runs automatically on `supabase start`; the `db/migrations/v3_*.sql` and `v4_*.sql` files are applied separately by the start script (they are not in the supabase migrations dir).
+- **Exercise seed**: `npm run seed:exercises` currently fails because `exercises` only has a *partial* unique index on `name` (`where owner_id is null`), which PostgREST can't use as an `on_conflict` target. The start script seeds via generated SQL with `on conflict do nothing` instead.
+- **Env keys**: local Supabase keys are deterministic defaults; `.env.local` is generated from `supabase status -o env`. Set `OPENROUTER_API_KEY` (Cloud Agent secret) to enable the AI assistant — the rest of the app works without it.
+- **Access code for local signup**: insert one, e.g. `insert into access_codes (code, max_uses) values ('TEST-TEST-TEST-TEST', 100);`.
